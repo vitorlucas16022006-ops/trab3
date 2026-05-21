@@ -13,8 +13,13 @@ class Cliente:
         self.renda = renda
         self.cpf = cpf
 
+    # CLIENTE PREMIUM
     def eh_premium(self):
         return self.renda > 15000
+
+    # CLIENTE VIP BLACK
+    def eh_vip(self):
+        return self.renda > 100000
 
 
 class Investimento:
@@ -44,11 +49,36 @@ def cadastrar_cliente():
         messagebox.showwarning("Aviso", "Preencha todos os campos.")
         return
 
+    # VALIDAR CPF
+    if not cpf.isdigit() or len(cpf) != 11:
+        messagebox.showerror(
+            "Erro",
+            "CPF inválido. Digite 11 números."
+        )
+        return
+
     try:
         renda = float(renda)
-    except:
+
+    except ValueError:
         messagebox.showerror("Erro", "Renda inválida.")
         return
+
+    # VERIFICAR CPF DUPLICADO
+    if os.path.exists(ARQUIVO):
+
+        with open(ARQUIVO, "r") as arquivo:
+
+            for linha in arquivo.readlines():
+
+                dados = linha.strip().split(";")
+
+                if len(dados) == 3 and dados[1] == cpf:
+                    messagebox.showerror(
+                        "Erro",
+                        "CPF já cadastrado."
+                    )
+                    return
 
     with open(ARQUIVO, "a") as arquivo:
         arquivo.write(f"{nome};{cpf};{renda}\n")
@@ -61,12 +91,14 @@ def cadastrar_cliente():
 
 
 def listar_clientes():
+
     lista_clientes.delete(*lista_clientes.get_children())
 
     if not os.path.exists(ARQUIVO):
         return
 
     with open(ARQUIVO, "r") as arquivo:
+
         for linha in arquivo.readlines():
 
             dados = linha.strip().split(";")
@@ -82,6 +114,7 @@ def listar_clientes():
 
 
 def acessar_app():
+
     cpf_busca = input_busca.get()
 
     if not os.path.exists(ARQUIVO):
@@ -101,7 +134,8 @@ def acessar_app():
 
             try:
                 renda = float(renda_str)
-            except:
+
+            except ValueError:
                 continue
 
             if cpf == cpf_busca:
@@ -110,7 +144,7 @@ def acessar_app():
 
                 janela = tk.Toplevel(root)
                 janela.title("Aplicativo do Cliente")
-                janela.geometry("500x450")
+                janela.geometry("500x500")
                 janela.config(bg="#2b2b2b")
 
                 titulo = tk.Label(
@@ -120,12 +154,13 @@ def acessar_app():
                     fg="white",
                     font=("Arial", 18, "bold")
                 )
+
                 titulo.pack(pady=15)
 
                 info = f"""
 Cliente: {cliente.nome}
 CPF: {cliente.cpf}
-Renda: R$ {cliente.renda:.2f}
+Renda: R$ {cliente.renda:,.2f}
 """
 
                 tk.Label(
@@ -136,8 +171,64 @@ Renda: R$ {cliente.renda:.2f}
                     font=("Arial", 12)
                 ).pack()
 
+                # =========================
+                # CLIENTE VIP BLACK
+                # =========================
+                if cliente.eh_vip():
+
+                    tk.Label(
+                        janela,
+                        text="ÁREA VIP BLACK",
+                        bg="#2b2b2b",
+                        fg="gold",
+                        font=("Arial", 16, "bold")
+                    ).pack(pady=10)
+
+                    investimentos_vip = [
+
+                        Investimento(
+                            "Bitcoin Internacional",
+                            25000
+                        ),
+
+                        Investimento(
+                            "Fundos Milionários",
+                            40000
+                        ),
+
+                        Investimento(
+                            "Carteira Global",
+                            55000
+                        ),
+
+                        Investimento(
+                            "Private Equity",
+                            80000
+                        )
+                    ]
+
+                    for inv in investimentos_vip:
+
+                        btn = tk.Button(
+                            janela,
+                            text=f"{inv.tipo} | Lucro: R$ {inv.lucro}",
+                            bg="gold",
+                            fg="black",
+                            width=38,
+                            height=2,
+                            command=lambda i=inv:
+                            messagebox.showinfo(
+                                "INVESTIMENTO VIP",
+                                f"Você escolheu:\n{i.tipo}\n\nLucro esperado: R$ {i.lucro}"
+                            )
+                        )
+
+                        btn.pack(pady=8)
+
+                # =========================
                 # CLIENTE PREMIUM
-                if cliente.eh_premium():
+                # =========================
+                elif cliente.eh_premium():
 
                     tk.Label(
                         janela,
@@ -148,9 +239,21 @@ Renda: R$ {cliente.renda:.2f}
                     ).pack(pady=10)
 
                     investimentos = [
-                        Investimento("Renda Fixa", 1200),
-                        Investimento("Ações", 3500),
-                        Investimento("Fundos Imobiliários", 2800)
+
+                        Investimento(
+                            "Renda Fixa",
+                            1200
+                        ),
+
+                        Investimento(
+                            "Ações",
+                            3500
+                        ),
+
+                        Investimento(
+                            "Fundos Imobiliários",
+                            2800
+                        )
                     ]
 
                     for inv in investimentos:
@@ -171,7 +274,9 @@ Renda: R$ {cliente.renda:.2f}
 
                         btn.pack(pady=8)
 
+                # =========================
                 # CLIENTE COMUM
+                # =========================
                 else:
 
                     tk.Label(
@@ -183,8 +288,11 @@ Renda: R$ {cliente.renda:.2f}
                     ).pack(pady=15)
 
                     anuncios = [
+
                         "Cartão sem anuidade",
+
                         "Seguro de vida",
+
                         "Empréstimo consignado"
                     ]
 
@@ -209,11 +317,23 @@ Renda: R$ {cliente.renda:.2f}
 barra_menu = tk.Menu(root)
 
 menu_arquivo = tk.Menu(barra_menu, tearoff=0)
-menu_arquivo.add_command(label="Listar Clientes", command=listar_clientes)
-menu_arquivo.add_separator()
-menu_arquivo.add_command(label="Sair", command=root.quit)
 
-barra_menu.add_cascade(label="Menu", menu=menu_arquivo)
+menu_arquivo.add_command(
+    label="Listar Clientes",
+    command=listar_clientes
+)
+
+menu_arquivo.add_separator()
+
+menu_arquivo.add_command(
+    label="Sair",
+    command=root.quit
+)
+
+barra_menu.add_cascade(
+    label="Menu",
+    menu=menu_arquivo
+)
 
 root.config(menu=barra_menu)
 
@@ -235,7 +355,13 @@ titulo.pack(pady=20)
 # =========================
 # FRAME CADASTRO
 # =========================
-frame_cadastro = tk.Frame(root, bg="#2b2b2b", padx=20, pady=20)
+frame_cadastro = tk.Frame(
+    root,
+    bg="#2b2b2b",
+    padx=20,
+    pady=20
+)
+
 frame_cadastro.pack(pady=10)
 
 tk.Label(
