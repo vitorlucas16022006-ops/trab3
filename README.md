@@ -5,3 +5,4 @@ que mostra diferentes alternativas de investimentos de acordo com a rendimento m
 joão guilherme bazeth
 vitor lucas da costa castilho'
 kaio dos santos gonçalves 
+igor faustino
